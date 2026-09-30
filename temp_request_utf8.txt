@@ -1,0 +1,110 @@
+﻿<USER_REQUEST>
+ROLE
+You are a senior PHP backend engineer. Build the complete backend for my existing website "Millenniumebooks" (legal entity: Nova Forge LLC, USA; site: www.millenniumebooks.com). The front-end HTML/CSS design already exists in my project folder. KEEP the current design exactly (beige #f3f1ec background, gold/tan accent #c4a484, dark charcoal buttons, serif headings). Convert the pages to PHP using shared partials (header.php, footer.php) and connect them to a MySQL database via PDO.
+
+TECH STACK
+- PHP 8.1+, MySQL 8 / MariaDB 10.4+, PDO ONLY (no mysqli). Engine InnoDB, charset utf8mb4_unicode_ci.
+- PDO settings: ERRMODE_EXCEPTION, FETCH_ASSOC, ATTR_EMULATE_PREPARES=false. ALL queries must be prepared statements.
+- No heavy framework. Use a clean lightweight structure (simple router or one PHP file per page + includes). Composer allowed ONLY for: stripe/stripe-php, vlucas/phpdotenv, phpmailer/phpmailer.
+- Must run on cPanel shared hosting and locally (XAMPP/Laragon).
+- Config via .env (DB_HOST, DB_NAME=millenniumebooks, DB_USER, DB_PASS, APP_URL, STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET, SMTP_*, MAIL_FROM=info@millenniumebooks.com, ADMIN_EMAIL). Provide .env.example. Never hardcode secrets.
+
+PROJECT STRUCTURE
+/public (or public_html): index.php, pages, assets (css/js/images), download.php, stripe-webhook.php, admin/ entry
+/app: config, Database.php (PDO singleton), helpers, Auth, CSRF, Mailer, Stripe service, models/services
+/storage (OUTSIDE web root or protected with .htaccess "Deny from all"): private e-book files, custom project deliverables, logs
+/database: schema.sql, seed.sql
+README.md
+
+DATABASE - FOLLOW THIS SCHEMA (based on my ERD screenshot)
+Create database "millenniumebooks". Every table has id BIGINT(20) UNSIGNED AUTO_INCREMENT PRIMARY KEY and created_at/updated_at TIMESTAMP where shown.
+
+EXISTING TABLES (keep exactly these columns):
+- users: id, name varchar(100), email varchar(150), password varchar(255), role enum('customer','admin') default 'customer', status tinyint(1) default 1, created_at, updated_at
+- authors: id, name varchar(150), slug varchar(150), bio text, image varchar(255), created_at, updated_at
+- books: id, author_id, title varchar(255), slug varchar(255), description longtext, isbn varchar(50) NULL, price decimal(10,2), sale_price decimal(10,2) NULL, cover_image varchar(255), file_path varchar(255), file_type varchar(20), pages int unsigned, published_at date, status tinyint(1), created_at, updated_at
+- categories: id, name varchar(100), slug varchar(150), description text, status tinyint(1), created_at, updated_at
+- book_categories: id, book_id, category_id, created_at   (NOTE: column must be spelled category_id)
+- carts: id, user_id, created_at, updated_at
+- cart_items: id, cart_id, book_id, quantity int unsigned default 1, price decimal(10,2), created_at, updated_at
+- orders: id, user_id, order_number varchar(50), subtotal decimal(10,2), discount decimal(10,2), tax decimal(10,2), total decimal(10,2), currency varchar(10) default 'USD', status enum('pending','paid','failed','cancelled','refunded'), created_at, updated_at
+- order_items: id, order_id, book_id, quantity int unsigned, price decimal(10,2)
+- payments: id, order_id, user_id, provider varchar(50) default 'stripe', transaction_id varchar(255), payment_intent_id varchar(255), checkout_session_id varchar(255), amount decimal(10,2), currency varchar(10), status enum('pending','succeeded','failed','cancelled','refunded'), paid_at timestamp NULL, raw_response longtext, created_at, updated_at
+- downloads: id, user_id, book_id, order_id, download_count int unsigned default 0, last_downloaded_at timestamp NULL, created_at, updated_at
+- user_library: id, user_id, book_id, order_id, purchased_price decimal(10,2), purchased_at timestamp
+- wishlists: id, user_id, book_id, created_at
+- reviews: id, user_id, book_id, rating tinyint unsigned, comment text, status tinyint(1) default 0 (0=pending, 1=approved), created_at, updated_at
+
+REQUIRED IMPROVEMENTS TO THOSE TABLES
+- UNIQUE keys: users.email; books.slug; categories.slug; authors.slug; orders.order_number; payments.transaction_id (nullable-unique) and payments.checkout_session_id; book_categories(book_id,category_id); cart_items(cart_id,book_id); carts.user_id; user_library(user_id,book_id); wishlists(user_id,book_id); reviews(user_id,book_id); order_items(order_id,book_id).
+- Indexes on all foreign keys and on books(status, published_at), orders(status), payments(status).
+- Foreign keys: cart/wishlist/review/download children may CASCADE from parent user/book; orders, order_items, payments, user_library MUST use ON DELETE RESTRICT (financial records are never deleted). books.author_id nullable, ON DELETE SET NULL.
+- books: add short_description varchar(500), file_size bigint unsigned NULL.
+- orders: add order_type enum('ready_made','custom') default 'ready_made', customer_email varchar(150), paid_at timestamp NULL.
+- order_items: add book_title varchar(255) (snapshot at purchase time).
+- downloads: add max_downloads int unsigned default 5, expires_at timestamp NULL; UNIQUE(user_id,book_id,order_id).
+- reviews: rating must be 1-5 (CHECK or app validation). Only users who own the book (user_library) may review; reviews start as pending and need admin approval.
+- Application rule: e-book quantity is ALWAYS 1.
+
+NEW TABLES TO ADD
+- packages: name, slug (unique), price decimal(10,2), description text, word_limit int, revisions int (-1 = unlimited), formats varchar(100), delivery_days int, fast_delivery_days int, fast_delivery_extra decimal(10,2), features JSON, is_popular tinyint, status tinyint, sort_order int. Seed: Starter $500, Professional $900 (popular), Premium $1500 (same values as my services page).
+- custom_orders: order_number (unique), user_id NULL, package_id, customer_name, customer_email, topic varchar(255), target_audience varchar(255), word_count int, deadline date NULL, notes text, fast_delivery tinyint, terms_accepted_at timestamp, quoted_price decimal(10,2) NULL, order_id NULL (FK to orders once payment is created), revisions_used int default 0, status enum('brief_submitted','under_review','awaiting_payment','in_progress','draft_delivered','revision_requested','completed','cancelled','refunded').
+- custom_order_files: custom_order_id, uploaded_by enum('admin','client'), file_name, file_path, note, created_at.
+- custom_order_messages: custom_order_id, sender enum('admin','client'), message text, created_at.
+- portfolio_items: title, slug, genre, client_type, description, cover_image, permission_confirmed tinyint (only show items with 1), status, sort_order.
+- contact_messages: name, email, subject, message, ip_address, status enum('new','read','replied'), created_at.
+- newsletter_subscribers: email (unique), status, created_at.
+- password_resets: user_id, token_hash, expires_at, used_at, created_at.
+- stripe_events: event_id (unique), type, processed_at (for webhook idempotency).
+
+Deliver database/schema.sql (full CREATE TABLE with FKs) and database/seed.sql (categories, packages, 8 clearly-marked SAMPLE original books priced $100-$300, portfolio placeholders). Do NOT hardcode an admin password: provide a CLI script (php create-admin.php) that asks for email/password and stores password_hash().
+
+FEATURES TO BUILD
+PUBLIC SITE
+1. Register / login / logout / forgot & reset password (token hashed in password_resets, 1-hour expiry). Use password_hash(PASSWORD_DEFAULT), session_regenerate_id on login, secure session cookie flags.
+2. Ready-made store: catalog with category filter + search + pagination, book detail page (cover, description, price/sale_price, format, pages, approved reviews), wishlist.
+3. Cart (DB-based, requires login): add/remove, totals calculated ONLY on the server from the books table.
+4. Checkout with Stripe Checkout Sessions (server-side, USD): create pending order + order_items + pending payment, redirect to Stripe. NEVER trust prices from the browser.
+5. stripe-webhook.php: verify the Stripe signature; use stripe_events for idempotency; on checkout.session.completed -> mark payment succeeded, order paid, insert user_library + downloads rows, clear cart, send confirmation email with library link. Also handle checkout.session.expired, payment_intent.payment_failed and charge.refunded (set refunded and revoke downloads). The success redirect page (thank-you.php) must NOT mark orders as paid.
+6. My Account: My Library, Order history, Wishlist, Profile / change password.
+7. Secure downloads: download.php?book=ID verifies login + user_library + paid order + max_downloads + expires_at, then streams the file from /storage with correct headers and increments download_count. Direct file URLs must never be accessible.
+8. Custom e-book flow: services.php reads packages from DB; order.php saves the brief into custom_orders (CSRF, validation, terms checkbox), emails admin + client. Admin later sets quoted_price and clicks "Create payment link", which creates a Stripe Checkout Session linked to an orders row (order_type='custom'); the webhook moves custom_orders.status to in_progress. Client can view status, download delivered files and request revisions (respect the package's revision limit) from My Account.
+9. portfolio.php (only permission_confirmed items), contact form -> contact_messages + email to admin, newsletter signup -> newsletter_subscribers (duplicate-safe), then redirect to thank-you.php.
+10. Legal pages (privacy, terms, refund-policy) stay as static content pages.
+
+ADMIN PANEL (/admin, role=admin only)
+Dashboard (totals for orders, revenue, pending custom orders, new messages); CRUD for books (cover + file upload), categories, authors, packages, portfolio; orders and payments viewer (with manual refund-status note); custom order workflow (change status, set quote, upload deliverables, message client, create Stripe payment link); review moderation; contact messages; newsletter subscribers with CSV export; users list (activate/deactivate).
+
+SECURITY REQUIREMENTS (mandatory)
+- Prepared statements everywhere; escape all output with htmlspecialchars; CSRF token on every POST form; honeypot + basic rate limiting on login, register, contact and newsletter forms.
+- Upload validation: extension whitelist (jpg, png, webp for covers; pdf, epub for books; pdf, epub, docx, zip for deliverables), MIME check, size limit, random filenames, stored outside web root.
+- Security headers, HTTPS redirect, .htaccess protecting /app, /storage, /database and .env; display_errors off in production, errors logged to /storage/logs.
+- Money handled as decimal strings or integer cents; convert to cents for Stripe. Store only Stripe response data in raw_response, never keys.
+- Email: PHPMailer via SMTP, plain professional templates (order confirmation, custom-order received, password reset, delivery ready).
+
+INTEGRATION WITH EXISTING FRONT-END
+- Reuse my current pages/CSS; replace js/products.js and Stripe Payment Link placeholders with DB-driven content.
+- Navbar: Home | Services | Ready-Made E-books | Portfolio | How It Works | About | Contact, plus Login/Account and a real Cart with item count from the DB.
+- No fake stats, no fake reviews, no invented testimonials. Contact email is always info@millenniumebooks.com.
+- Legal entity in footer: Nova Forge LLC.
+
+DELIVERABLES
+1. Full working source code, schema.sql, seed.sql, create-admin.php, .env.example.
+2. README.md: local setup, importing the DB, composer install, Stripe test-mode keys, running "stripe listen --forward-to localhost/stripe-webhook.php", webhook events to enable in the Stripe dashboard, cPanel deployment steps, file permissions.
+3. A test checklist covering: register/login, add to cart, test-card payment (4242 4242 4242 4242), webhook success, library access, download limit, refund handling, custom order flow, admin CRUD.
+4. A final list of placeholders I must fill (Stripe keys, SMTP, registered address, real e-books and files, real portfolio, final prices).
+
+Work step by step: first schema.sql, then core (DB, auth, CSRF), then store and Stripe, then custom orders, then admin panel, then README. Tell me if any requirement is ambiguous instead of inventing behavior.
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-09-30T11:50:29+05:00.
+
+The user's current state is as follows:
+Active Document: d:\EBOOKS\js\products.js (LANGUAGE_JAVASCRIPT)
+Cursor is on line: 1
+Other open documents:
+- d:\EBOOKS\js\products.js (LANGUAGE_JAVASCRIPT)
+</ADDITIONAL_METADATA>
+<USER_SETTINGS_CHANGE>
+The user changed setting `Model Selection` from Gemini 3.8 Flash (Medium) to Gemini 3.1 Pro (Low). No need to comment on this change if the user doesn't ask about it. If reporting what model you are, please use a human readable name instead of the exact string.
+</USER_SETTINGS_CHANGE>

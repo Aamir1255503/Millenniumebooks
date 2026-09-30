@@ -4,9 +4,14 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Submission Received - Thank You | Millenniumebooks</title>
-  <meta name="description" content="Thank you for contacting Millenniumebooks. We have received your submission and will get back to you shortly.">
-  <meta name="robots" content="noindex, nofollow">
+  <title>Ready-Made E-Books Store - Millenniumebooks</title>
+  <meta name="description" content="Browse our exclusive collection of 100% original ready-made e-books. Instant digital downloads in PDF and EPUB formats. Secure payments via Stripe.">
+  
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Ready-Made E-Books Store - Millenniumebooks">
+  <meta property="og:description" content="Original e-books priced between $100–$300. Instant digital download in PDF & EPUB upon secure Stripe checkout.">
+  <meta property="og:url" content="https://www.millenniumebooks.com/ready-made.html">
+  <meta property="og:site_name" content="Millenniumebooks">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -53,7 +58,7 @@
               <ul class="nav-links-list">
                 <li><a href="index.html">Home</a></li>
                 <li><a href="services.html">Services</a></li>
-                <li><a href="ready-made.html">Ready-Made E-books</a></li>
+                <li class="active"><a href="ready-made.html">Ready-Made E-books</a></li>
                 <li><a href="portfolio.html">Portfolio</a></li>
                 <li><a href="how-it-works.html">How It Works</a></li>
                 <li><a href="about.html">About</a></li>
@@ -77,7 +82,7 @@
         <ul class="mobile-nav-list">
           <li><a href="index.html">Home</a></li>
           <li><a href="services.html">Services (Custom E-books)</a></li>
-          <li><a href="ready-made.html">Ready-Made E-books</a></li>
+          <li class="active"><a href="ready-made.html">Ready-Made E-books</a></li>
           <li><a href="portfolio.html">Portfolio</a></li>
           <li><a href="how-it-works.html">How It Works</a></li>
           <li><a href="about.html">About Us</a></li>
@@ -95,48 +100,66 @@
        ======================================================================== -->
   <section class="page-hero">
     <div class="container">
-      <span class="hero-badge">Confirmation</span>
-      <h1 class="page-title">Thank You!</h1>
-      <p class="page-breadcrumb"><a href="index.html">Home</a> / Confirmation</p>
+      <span class="hero-badge">Instant Digital Download</span>
+      <h1 class="page-title">Ready-Made Original E-Books</h1>
+      <p class="page-subtitle">
+        Curated, original e-books written and designed by Nova Forge LLC. No PLR, no syndicated copies. Each purchase includes immediate digital download access to both PDF and EPUB files.
+      </p>
+      <div class="page-breadcrumb">
+        <a href="index.html">Home</a> / Ready-Made Store
+      </div>
     </div>
   </section>
 
   <!-- ========================================================================
-       THANK YOU MAIN MESSAGE
+       STORE SECTION WITH CATEGORY FILTER TABS
        ======================================================================== -->
-  <section class="py-5 my-5">
+  <section class="py-5 my-4">
     <div class="container">
-      <div class="row justify-content-center">
-        <div class="col-lg-8 text-center">
-          <div class="p-5 bg-white border rounded shadow-sm">
-            
-            <!-- Elegant SVG Checkmark Icon -->
-            <div style="width: 84px; height: 84px; background: #e8f5e9; border: 2px solid #2e7d32; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 28px auto;">
-              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#2e7d32" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-            </div>
-
-            <h2 style="font-size: 2.2rem; margin-bottom: 16px;">We Have Received Your Submission</h2>
-
-            <p style="font-size: 1.08rem; color: #555; line-height: 1.8; margin-bottom: 24px; max-width: 600px; margin-left: auto; margin-right: auto;">
-              Thank you for connecting with <strong>Millenniumebooks</strong>. If you submitted a custom project brief or inquiry, our editorial desk will review your details and respond by email within <strong>1–2 business days</strong> with next steps or a secure Stripe invoice.
-            </p>
-
-            <div class="legal-callout-box d-inline-block text-start mb-4">
-              <strong>Need urgent assistance?</strong> Reach our editorial team directly at <a href="mailto:info@millenniumebooks.com" style="color: #c4a484; font-weight: 700;">info@millenniumebooks.com</a>.
-            </div>
-
-            <div class="d-flex flex-wrap justify-content-center gap-3 mt-3">
-              <a href="index.html" class="btn-gold"><i class="icon icon-home me-2"></i> Return to Home</a>
-              <a href="ready-made.html" class="btn-outline-gold">Browse Ready-Made E-Books <i class="icon icon-ns-arrow-right ms-1"></i></a>
-            </div>
-
-          </div>
-        </div>
+      
+      <!-- Category Filter Tabs -->
+      <div class="filter-tabs-bar">
+        <button type="button" class="filter-tab-btn active" data-category="all">All Titles</button>
+        <button type="button" class="filter-tab-btn" data-category="business">Business & Strategy</button>
+        <button type="button" class="filter-tab-btn" data-category="self-help">Self-Help & Productivity</button>
+        <button type="button" class="filter-tab-btn" data-category="technology">Technology & AI</button>
+        <button type="button" class="filter-tab-btn" data-category="finance">Finance & Wealth</button>
+        <button type="button" class="filter-tab-btn" data-category="health">Health & Longevity</button>
       </div>
+
+      <!-- 
+        NOTE FOR SITE OWNER:
+        These product cards are rendered automatically from js/products.js (READY_MADE_PRODUCTS).
+        You can easily replace the titles, covers, prices ($100–$300), and Stripe links inside js/products.js.
+      -->
+      <div class="row g-4" id="ready-made-grid-container">
+        <!-- Rendered dynamically by js/main.js -> initReadyMadeStore() -->
+        <noscript>
+          <div class="col-12 text-center py-5">
+            <p>Please enable JavaScript to browse our interactive ready-made e-book catalogue.</p>
+          </div>
+        </noscript>
+      </div>
+
+      <!-- Information Callout Box -->
+      <div class="legal-callout-box mt-5 text-center">
+        <strong>Digital Delivery Guarantee:</strong> All titles are delivered immediately as digital PDF and EPUB master files via direct download link and automated email confirmation following secure Stripe payment.
+      </div>
+
     </div>
   </section>
+
+  <!-- ========================================================================
+       PRODUCT DETAIL MODAL
+       ======================================================================== -->
+  <div id="product-detail-modal" class="product-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-book-title">
+    <div class="product-modal-content">
+      <button type="button" class="product-modal-close" aria-label="Close details dialog">&times;</button>
+      <div id="product-modal-dynamic-content">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+  </div>
 
   <!-- ========================================================================
        FOOTER
